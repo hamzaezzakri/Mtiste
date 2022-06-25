@@ -18,6 +18,10 @@ spring:
     hibernate:
       ddl-auto: create
 
+  jackson:
+    serialization:
+      FAIL_ON_EMPTY_BEANS: 'false'
+
   mail:
     host: localhost
     port: 1025

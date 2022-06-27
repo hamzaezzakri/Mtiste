@@ -9,4 +9,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
  */
 
 public interface PatientRepository extends JpaRepository<Patient,Long> {
+
+    Patient findByNomPrenom(String nomPrenom);
+    Patient findByCin(String cin);
 }

@@ -61,7 +61,7 @@ public class PatientController {
                 .filter(rdv -> rdv.getCreatedAt().toLocalDate().equals(LocalDate.now()))
                 .collect(Collectors.toList());
 
-        if(rendezVous.size() > 1){
+        if(rendezVous.size() >= 1){
 
             return ResponseEntity.badRequest().body("vous ne pouvez pas réserver plusieurs rendez-vous le même jour");
         }

@@ -1,12 +1,14 @@
 package ma.cigma.pfe.controller;
 
 import ma.cigma.pfe.model.Patient;
+import ma.cigma.pfe.model.RendezVous;
 import ma.cigma.pfe.service.IPatientService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -24,7 +26,7 @@ public class PatientController {
     private IPatientService patientService;
 
     @GetMapping("/all-patients")
-    public ResponseEntity<List<Patient>> getAll(){
+    public ResponseEntity<List<Patient>>getAll(){
 
         return ResponseEntity.ok(patientService.getAll().stream()
                 .filter(p -> p.getIsEnabled())
@@ -32,11 +34,11 @@ public class PatientController {
     }
 
     @PostMapping("/save-patient")
-    public ResponseEntity<?> savePatient(@RequestBody @Valid Patient patient){
+    public ResponseEntity<?>savePatient(@RequestBody @Valid Patient patient){
 
-        if(patient.getRendezVous().size() != 1 || patient.getFactures().size() != 0){
+        if(patient.getRendezVous().size() != 1 || patient.getFactures().size() != 0 || patient.getRendezVous().get(0).getConsultation() != null){
 
-            return ResponseEntity.badRequest().body("veuillez associer un rendez-vous au patient");
+            return ResponseEntity.badRequest().body("veuillez associer un rendez-vous au patient sans consultation");
         }
 
         if(patientService.existsByDateVisiteAndHeureVisite(patient.getRendezVous().get(0).getDateVisite(),
@@ -47,18 +49,32 @@ public class PatientController {
         if(oldPatient == null) {
 
             patientService.addPatient(patient);
-            return ResponseEntity.ok("patient enregistré avec succès");
+            return ResponseEntity.ok("rendez-vous enregistré avec succès");
+        }
+
+        if(oldPatient.getRendezVous().get(oldPatient.getRendezVous().size()-1).getDateVisite().compareTo(patient.getRendezVous().get(0).getDateVisite()) == 0){
+
+            return ResponseEntity.badRequest().body("vous ne pouvez pas prendre plusieurs rendez-vous dans la même journée");
+        }
+
+        List<RendezVous> rendezVous = oldPatient.getRendezVous().stream()
+                .filter(rdv -> rdv.getCreatedAt().toLocalDate().equals(LocalDate.now()))
+                .collect(Collectors.toList());
+
+        if(rendezVous.size() > 1){
+
+            return ResponseEntity.badRequest().body("vous ne pouvez pas réserver plusieurs rendez-vous le même jour");
         }
 
         patient.setId(oldPatient.getId());
         patient.setCreatedAt(oldPatient.getCreatedAt());
         patient.setIsEnabled(oldPatient.getIsEnabled());
         patientService.addRendezVousToPatient(patient);
-        return ResponseEntity.ok().body("patient enregistré avec succès");
+        return ResponseEntity.ok().body("rendez-vous enregistré avec succès");
     }
 
     @PutMapping("/update-patient/{id}")
-    public ResponseEntity<?> updatePatient(@RequestBody @Valid Patient patient, @PathVariable("id") Long idPatient){
+    public ResponseEntity<?>updatePatient(@RequestBody @Valid Patient patient, @PathVariable("id") Long idPatient){
 
         if(patient.getRendezVous().size() != 0 || patient.getFactures().size() != 0){
 
@@ -73,7 +89,7 @@ public class PatientController {
     }
 
     @DeleteMapping("/delete-patient/{id}")
-    public ResponseEntity<?> deletePatient(@PathVariable("id") Long idPatient){
+    public ResponseEntity<?>deletePatient(@PathVariable("id") Long idPatient){
 
         if(!patientService.existsById(idPatient))
             return ResponseEntity.badRequest().body("patient n'existe pas");
@@ -83,7 +99,7 @@ public class PatientController {
     }
 
     @PostMapping("/save-facture")
-    public ResponseEntity<?> saveFacture(@RequestBody @Valid Patient patient){
+    public ResponseEntity<?>saveFacture(@RequestBody @Valid Patient patient){
 
         if(patient.getFactures().size() != 1 || patient.getRendezVous().size() != 0){
 

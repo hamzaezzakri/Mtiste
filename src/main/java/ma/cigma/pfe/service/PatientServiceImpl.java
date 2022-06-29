@@ -88,6 +88,12 @@ public class PatientServiceImpl implements IPatientService{
     }
 
     @Override
+    public Patient getById(Long idPatient) {
+
+        return patientRepository.findById(idPatient).orElse(null);
+    }
+
+    @Override
     public boolean existsById(Long idPatient) {
 
         return patientRepository.existsById(idPatient);

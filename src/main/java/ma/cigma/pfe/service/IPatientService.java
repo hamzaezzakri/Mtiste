@@ -19,6 +19,7 @@ public interface IPatientService {
     void addRendezVousToPatient(Patient patient);
     List<Patient> getAll();
     void updatePatient(Patient patient, Long idPatient);
+    Patient getById(Long idPatient);
     boolean existsById(Long idPatient);
     void deletePatient(Long idPatient);
     void addFactureToPatient(Patient patient);

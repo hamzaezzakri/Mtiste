@@ -107,7 +107,7 @@ public class PatientController {
             return ResponseEntity.badRequest().body("veuillez associer une facture au patient");
         }
 
-        Patient oldPatient = patientService.findByNomPrenom(patient.getNomPrenom());
+        Patient oldPatient = patientService.getById(patient.getId());
         if(oldPatient == null) {
 
             return ResponseEntity.badRequest().body("patient n'existe pas");
@@ -115,7 +115,7 @@ public class PatientController {
 
         oldPatient.setFactures(patient.getFactures());
         patientService.addFactureToPatient(oldPatient);
-        return ResponseEntity.status(HttpStatus.CREATED).body("facture enregistré avec succès");
+        return ResponseEntity.status(HttpStatus.CREATED).body("facture enregistrée avec succès");
     }
 
 }

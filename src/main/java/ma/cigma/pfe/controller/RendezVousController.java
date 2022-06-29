@@ -4,6 +4,7 @@ import ma.cigma.pfe.model.RendezVous;
 import ma.cigma.pfe.service.IPatientService;
 import ma.cigma.pfe.service.IRendezVousService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -55,7 +56,7 @@ public class RendezVousController {
 
         oldRendezVous.setConsultation(rendezVous.getConsultation());
         rendezVousService.addConsultationToRendezVous(oldRendezVous);
-        return ResponseEntity.ok().body("consultation enregistrée avec succès");
+        return ResponseEntity.status(HttpStatus.CREATED).body("consultation enregistrée avec succès");
     }
 
     @PutMapping("/update-rendez-vous/{id}")

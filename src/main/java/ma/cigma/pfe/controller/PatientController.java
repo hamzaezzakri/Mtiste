@@ -2,13 +2,16 @@ package ma.cigma.pfe.controller;
 
 import ma.cigma.pfe.model.Patient;
 import ma.cigma.pfe.model.RendezVous;
+import ma.cigma.pfe.service.IJavaMailSender;
 import ma.cigma.pfe.service.IPatientService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.mail.MessagingException;
 import javax.validation.Valid;
+import java.io.UnsupportedEncodingException;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -25,6 +28,8 @@ public class PatientController {
 
     @Autowired
     private IPatientService patientService;
+    @Autowired
+    private IJavaMailSender javaMailSender;
 
     @GetMapping("/all-patients")
     public ResponseEntity<List<Patient>> getAll(){
@@ -35,7 +40,7 @@ public class PatientController {
     }
 
     @PostMapping("/save-patient")
-    public ResponseEntity<?> savePatient(@RequestBody @Valid Patient patient){
+    public ResponseEntity<?> savePatient(@RequestBody @Valid Patient patient) throws MessagingException, UnsupportedEncodingException {
 
         if(patient.getRendezVous().size() != 1 || patient.getFactures().size() != 0 || patient.getRendezVous().get(0).getConsultation() != null){
 
@@ -50,6 +55,8 @@ public class PatientController {
         if(oldPatient == null) {
 
             patientService.addPatient(patient);
+            javaMailSender.sendEmail(patient.getEmail(), patient.getNomPrenom(), patient.getRendezVous().get(0).getDateVisite(),
+                    patient.getRendezVous().get(0).getHeureVisite());
             return ResponseEntity.status(HttpStatus.CREATED).body("rendez-vous enregistré avec succès");
         }
 
@@ -62,7 +69,7 @@ public class PatientController {
                 .filter(rdv -> rdv.getCreatedAt().toLocalDate().equals(LocalDate.now()))
                 .collect(Collectors.toList());
 
-        if(rendezVous.size() >= 1){
+        if(rendezVous.size() >= 2){
 
             return ResponseEntity.badRequest().body("vous ne pouvez pas réserver plusieurs rendez-vous le même jour");
         }
@@ -71,6 +78,8 @@ public class PatientController {
         patient.setCreatedAt(oldPatient.getCreatedAt());
         patient.setIsEnabled(oldPatient.getIsEnabled());
         patientService.addRendezVousToPatient(patient);
+        javaMailSender.sendEmail(patient.getEmail(), patient.getNomPrenom(), patient.getRendezVous().get(0).getDateVisite(),
+                patient.getRendezVous().get(0).getHeureVisite());
         return ResponseEntity.status(HttpStatus.CREATED).body("rendez-vous enregistré avec succès");
     }
 
